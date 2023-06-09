@@ -41,10 +41,10 @@ VARopt.figname= 'Cholesky';
 VARirplot(IRbar,VARopt,IRinf,IRsup);
 
 %% check (delete later)
-fig = figure(2);
+fig =figure(1);
 
 subplot(3,1,1)
-plot(IR(:,3,3));
+plot(-IR(:,3,3));
 xlim([1 VARopt.nsteps]);
 title('Response of Real Oil Price to \epsilon^{os}')
 subplot(3,1,2)
@@ -83,9 +83,9 @@ SRout = SR(VAR,Sign,VARopt);
 
 %% 2.2.2. Sign Restriction (Agnostic) IRF and IRF Plots
 
-fig = figure(1);
+fig = figure(2);
 subplot(3,1,1)
-plot(squeeze(SRout.IRall(:,3,1,:))); hold on 
+plot(-(squeeze(SRout.IRall(:,3,1,:)))); hold on 
 plot(zeros(VARopt.nsteps),'--k','LineWidth',0.5); hold on
 xlim([1 VARopt.nsteps]);
 title('Response of Real Oil Price to \epsilon^{os}')
@@ -148,9 +148,10 @@ disp("Standard Deviation of the Bounded_Impact_Matrix");
 disp(Standard_Deviation_of_Bounded_Impact_Matrix);
 
 disp("Start: Sign Restirction (Elasticity-Bounded) IRF and IRF Plots");
-fig = figure(2);
+
+fig = figure(3);
 subplot(3,1,1)
-plot(squeeze(Bounded_SRout.IRall(:,3,1,:))); hold on
+plot(-(squeeze(Bounded_SRout.IRall(:,3,1,:)))); hold on
 plot(zeros(VARopt.nsteps),'--k','LineWidth',0.5); hold on
 xlim([1 VARopt.nsteps]);
 title('Response of Real Oil Price to \epsilon^{os}')
@@ -173,7 +174,7 @@ disp("End: Sign Restirction (Elasticity-Bounded) IRF and IRF Plots");
 disp(Bounded_SRout.VDall)
 
 %% 2.4 Max-Share Identification - Maximize: Production Change / Supply Shock
-% Using the Empirical Macro Toolbox built by Filippo Ferroni
+% Using the Empirical Macro Toolbox built by Ferroni F. and Canova F.
 % URL: https://github.com/naffe15/BVAR_
 
 %% 2.4.0. Bayesian Draws
@@ -213,6 +214,7 @@ options.saveas_strng = 'Max - Production Change - Supply Shock';
 options.shocksnames = {'Supply Shock','AD Shock','OSD Shock'};
 options.conf_sig_2 = 0.95;
 
+irfs(:,:,1,:) = -irfs(:,:,1,:);
 plot_all_irfs_(irfs,options);
 
 %% 2.5 Max-Share Identification - Maximize: Real Oil Price / Oil-Specific Demand Shock
@@ -236,9 +238,12 @@ for jj=1:jump:size(BVAR.Phi_draws,3)
     irfs(:,:,:,counter)=iresponse(Phi_draws, Sigma_draws, h_irf, Qbar);
 end
 
+%% 2.4.2. Plotting: Maximize: Real Oil Price / Oil-Specific Demand Shock
 options.varnames = {'Production Change', 'Real Economic Activities', 'Real Oil Price'};
 options.saveas_dir = 'Plots';
 options.saveas_strng = 'Max - Real Price of Oil - OSD Shock';
 options.shocksnames = {'Supply Shock','AD Shock','OSD Shock'};
 options.conf_sig_2 = 0.95;
+
+irfs(:,:,1,:) = -irfs(:,:,1,:); 
 plot_all_irfs_(irfs,options);
