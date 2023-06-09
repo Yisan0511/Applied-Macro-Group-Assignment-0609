@@ -40,23 +40,6 @@ VARopt.figname= 'Cholesky';
 [IRinf,IRsup,IRmed,IRbar] = VARirband(VAR,VARopt);
 VARirplot(IRbar,VARopt,IRinf,IRsup);
 
-%% check (delete later)
-fig =figure(1);
-
-subplot(3,1,1)
-plot(-IR(:,3,3));
-xlim([1 VARopt.nsteps]);
-title('Response of Real Oil Price to \epsilon^{os}')
-subplot(3,1,2)
-plot(IR(:,3,3));
-xlim([1 VARopt.nsteps]);
-title('Response of Real Oil Price to \epsilon^{os}')
-
-subplot(3,1,3)
-plot(IR(:,3,3));
-xlim([1 VARopt.nsteps]);
-title('Response of Real Oil Price to \epsilon^{os}')
-
 %% 2.1.4. Cholesky FEVD
 VARopt.figname= 'Cholesky';
 [VD, VAR] = VARvd(VAR,VARopt);
@@ -68,24 +51,27 @@ VARvdplot(VDbar,VARopt);
 % ** from Ambrogio Cesa-Bianchi's toolbox: https://github.com/ambropo/VAR-Toolbox
 VARopt.vnames = {'prod','rea', 'rpo'};
 VARopt.nsteps = 18;
-VARopt.firstdate = 1; % Need to revise
+VARopt.firstdate = 1;
 VARopt.frequency = 'm';
 VARopt.snames = {'s','ad','osd'};
 
 Sign = [ -1, 1, 1; -1, 1, -1; 1, 1, 1]; % Sign restrictions
 
 % Setting the parameters
-VARopt.ndraws = 36000;
+VARopt.ndraws = 36000; % Number of rotations needed
 VARopt.sr_hor = 1;
 VARopt.pctg = 68; 
 
 SRout = SR(VAR,Sign,VARopt);
 
 %% 2.2.2. Sign Restriction (Agnostic) IRF and IRF Plots
+figure(2);
 
-fig = figure(2);
+set(gcf,'name','Sign Restriction (Agnostic) IRF')
+set(gcf,'NumberTitle','off')
+
 subplot(3,1,1)
-plot(-(squeeze(SRout.IRall(:,3,1,:)))); hold on 
+plot(squeeze(SRout.IRall(:,3,1,:))); hold on 
 plot(zeros(VARopt.nsteps),'--k','LineWidth',0.5); hold on
 xlim([1 VARopt.nsteps]);
 title('Response of Real Oil Price to \epsilon^{os}')
@@ -101,6 +87,9 @@ plot(squeeze(SRout.IRall(:,3,3,:))); hold on
 plot(zeros(VARopt.nsteps),'--k','LineWidth',0.5); hold on
 xlim([1 VARopt.nsteps]);
 title('Response of Real Oil Price to \epsilon^{osd}')
+
+filename = 'IRF Plot - Sign Restriction (Agnostic).jpg';
+saveas(gcf, filename, 'jpeg')
 
 %% 2.2.3. Sign Restriction (Agnostic) FEVD
 
@@ -149,9 +138,12 @@ disp(Standard_Deviation_of_Bounded_Impact_Matrix);
 
 disp("Start: Sign Restirction (Elasticity-Bounded) IRF and IRF Plots");
 
-fig = figure(3);
+figure(3);
+
+set(gcf,'name','Sign Restriction (Elasticity-Bounded) IRF')
+set(gcf,'NumberTitle','off')
 subplot(3,1,1)
-plot(-(squeeze(Bounded_SRout.IRall(:,3,1,:)))); hold on
+plot(squeeze(Bounded_SRout.IRall(:,3,1,:))); hold on
 plot(zeros(VARopt.nsteps),'--k','LineWidth',0.5); hold on
 xlim([1 VARopt.nsteps]);
 title('Response of Real Oil Price to \epsilon^{os}')
@@ -167,6 +159,10 @@ plot(squeeze(Bounded_SRout.IRall(:,3,3,:))); hold on
 plot(zeros(VARopt.nsteps),'--k','LineWidth',0.5); hold on
 xlim([1 VARopt.nsteps]);
 title('Response of Real Oil Price to \epsilon^{osd}')
+
+filename = 'IRF Plot - Sign Restriction (Elasticity-Bounded).jpg';
+saveas(gcf, filename, 'jpeg')
+
 disp("End: Sign Restirction (Elasticity-Bounded) IRF and IRF Plots");
 
 %% 2.2.3. Sign Restriction (Elasticity-Bounded) FEVD
@@ -176,7 +172,6 @@ disp(Bounded_SRout.VDall)
 %% 2.4 Max-Share Identification - Maximize: Production Change / Supply Shock
 % Using the Empirical Macro Toolbox built by Ferroni F. and Canova F.
 % URL: https://github.com/naffe15/BVAR_
-
 %% 2.4.0. Bayesian Draws
 disp("Start: Max-Share Identification");
 addpath(genpath("BVAR_-master"));
@@ -187,13 +182,13 @@ options.priors.name='Minnesota';
 BVAR = bvar(Y, nlags, options);
 
 %% 2.4.1. Identification: Maximize: Production Change / Supply Shock
-v = 1;
-s = 1;
+v = 1; % Oil production change
+s = 1; % Supply shock
 h_max_fevd = 1; % Maximizing the FE of production change caused by supply shock
 
 counter = 0;
 bvar_size = size(BVAR.Phi_draws,3);
-jump = 100;
+jump = 10;
 irfs=nan(3,h_irf,3,(bvar_size/jump));
 
 for jj=1:jump:size(BVAR.Phi_draws,3)
@@ -214,17 +209,16 @@ options.saveas_strng = 'Max - Production Change - Supply Shock';
 options.shocksnames = {'Supply Shock','AD Shock','OSD Shock'};
 options.conf_sig_2 = 0.95;
 
-irfs(:,:,1,:) = -irfs(:,:,1,:);
 plot_all_irfs_(irfs,options);
 
 %% 2.5 Max-Share Identification - Maximize: Real Oil Price / Oil-Specific Demand Shock
-v = 3;
-s = 3;
+v = 3; % Real oil price
+s = 3; % Oil-specific demand shock
 h_max_fevd = 1; % Maximizing the FE of real oil price caused by oil-specific demand shock
 
 counter=0;
 bvar_size = size(BVAR.Phi_draws,3);
-jump = 100;
+jump = 10;
 irfs=nan(3,h_irf,3,(bvar_size/jump));
 
 for jj=1:jump:size(BVAR.Phi_draws,3)
@@ -245,5 +239,4 @@ options.saveas_strng = 'Max - Real Price of Oil - OSD Shock';
 options.shocksnames = {'Supply Shock','AD Shock','OSD Shock'};
 options.conf_sig_2 = 0.95;
 
-irfs(:,:,1,:) = -irfs(:,:,1,:); 
 plot_all_irfs_(irfs,options);
